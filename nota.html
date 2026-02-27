@@ -1,0 +1,42 @@
+from bs4 import BeautifulSoup
+import psycopg2
+
+def importar_do_arquivo():
+    try:
+        # 1. Abre o arquivo que você salvou
+        with open("nota.html", "r", encoding="utf-8") as f:
+            conteudo = f.read()
+        
+        soup = BeautifulSoup(conteudo, 'html.parser')
+        
+        # 2. Busca os itens (Baseado no texto que você me mandou)
+        nomes = soup.find_all(class_='fixo-prod-serv-descricao')
+        valores = soup.find_all(class_='fixo-prod-serv-vb')
+        
+        print(f"Encontrados {len(nomes)} itens no arquivo!")
+
+        # 3. Conecta no seu banco de dados
+        conn = psycopg2.connect(
+            host="localhost", database="cuponsdb", user="postgres", password="password123", port="5432"
+        )
+        cur = conn.cursor()
+
+        # Para cada item achado no texto, salva no banco
+        for n, v in zip(nomes, valores):
+            nome_item = n.get_text(strip=True)
+            valor_item = v.get_text(strip=True).replace(',', '.')
+            
+            # Insere (Aqui você pode ajustar o cupom_id)
+            cur.execute("INSERT INTO itens (cupom_id, nome, valor_unitario) VALUES (1, %s, %s)", 
+                        (nome_item, float(valor_item)))
+        
+        conn.commit()
+        cur.close()
+        conn.close()
+        print("✅ Tudo salvo no DBeaver com sucesso!")
+
+    except Exception as e:
+        print(f"Erro ao ler arquivo: {e}")
+
+# Chamar a função
+importar_do_arquivo()

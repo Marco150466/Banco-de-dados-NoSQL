@@ -1,0 +1,15 @@
+FROM python:3.9
+
+WORKDIR /app
+
+# Instala dependências do sistema necessárias para o psycopg2
+RUN apt-get update && apt-get install -y libpq-dev gcc
+
+# Copia o requirements e instala as bibliotecas do Python
+COPY requirements.txt .
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copia o resto do código
+COPY . .
+
+CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--reload"]
